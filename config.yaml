@@ -1,0 +1,134 @@
+name: "default-network"
+description: "The network description"
+version: 1.0.0
+client:
+  organization: org1.example.com
+  logging:
+    #debug or info
+    level: info
+  cryptoconfig:
+    path: ../crypto-config
+    #path: /opt/app/fabric/cli/user/org1.example.com/Admin-peer0.org1.example.com
+  credentialStore:
+    path: C:/Dev/tmp/
+    cryptoStore:
+      path: C:/Dev/tmp/msp
+  BCCSP:
+    security:
+     enabled: true
+     default:
+      provider: "SW"
+     hashAlgorithm: "SHA2"
+     softVerify: true
+     level: 256
+  tlsCerts:
+    systemCertPool: false
+    client:
+      key:
+        path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls/client.key
+        #path: /opt/app/fabric/cli/user/org1.example.com/Admin-peer0.org1.example.com/tls/client.key
+      cert:
+        path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls/client.crt
+        #path: /opt/app/fabric/cli/user/org1.example.com/Admin-peer0.org1.example.com/tls/client.crt
+channels:
+  cmhit:
+    peers:
+      peer0.org1.example.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+    policies:
+      queryChannelConfig:
+        minResponses: 1
+        maxTargets: 1
+        retryOpts:
+          attempts: 5
+          initialBackoff: 500ms
+          maxBackoff: 5s
+          backoffFactor: 2.0
+organizations:
+  org1.example.com:
+    mspid: Org1MSP
+    cryptoPath: peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/
+    #cryptoPath: msp/
+    peers:
+      - peer0.org1.example.com
+      - peer1.org1.example.com
+orderers:
+  orderer0.org1.example.com:
+    url: orderer0.org1.example.com:7050
+    grpcOptions:
+      ssl-target-name-override: orderer0.org1.example.com
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      allow-insecure: false
+    tlsCACerts:
+      path: ../crypto-config/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
+      #path: /opt/app/fabric/cli/user/org1.example.com/Admin-peer0.org1.example.com/tlsca.org1.example.com-cert.pem
+peers:
+  peer0.org1.example.com:
+    url: peer0.org1.example.com:7051
+    eventUrl: peer0.org1.example.com:7053
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.example.com
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      allow-insecure: false
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+      
+  peer1.org1.example.com:
+    url: peer1.org1.example.com:8051
+    eventUrl: peer1.org1.example.com:8053
+    grpcOptions:
+      ssl-target-name-override: peer1.org1.example.com
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      allow-insecure: false
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
+
+  peer0.org2.example.com:
+    url: peer0.org2.example.com:9051
+    eventUrl: peer0.org2.example.com:9053
+    grpcOptions:
+      ssl-target-name-override: peer0.org2.example.com
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      allow-insecure: false
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+      
+  peer1.org2.example.com:
+    url: peer1.org2.example.com:10051
+    eventUrl: peer1.org2.example.com:10053
+    grpcOptions:
+      ssl-target-name-override: peer1.org2.example.com
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      allow-insecure: false
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
+
+# entityMatchers:
+#   peer:
+#     - pattern: (\w*)peer1.org1.example.com:7051(\w*)
+#       urlSubstitutionExp: peer1.org1.example.com:8051
+#       eventUrlSubstitutionExp: peer1.org1.example.com:8053
+#     - pattern: (\w*)peer0.org2.example.com:7051(\w*)
+#       urlSubstitutionExp: peer0.org2.example.com:9051
+#       eventUrlSubstitutionExp: peer0.org2.example.com:9053
+#     - pattern: (\w*)peer1.org2.example.com:7051(\w*)
+#       urlSubstitutionExp: peer1.org2.example.com:10051
+#       eventUrlSubstitutionExp: peer1.org2.example.com:10053
