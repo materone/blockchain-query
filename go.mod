@@ -1,4 +1,4 @@
-module 01-query
+module blockchain-query
 
 go 1.12
 

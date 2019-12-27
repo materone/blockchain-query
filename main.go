@@ -1,7 +1,7 @@
 package main
 
 import (
-	"01-query/cchelper"
+	"blockchain-query/cchelper"
 	"flag"
 	"fmt"
 	"log"
