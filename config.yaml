@@ -31,7 +31,7 @@ client:
         path: ../crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls/client.crt
         #path: /opt/app/fabric/cli/user/org1.example.com/Admin-peer0.org1.example.com/tls/client.crt
 channels:
-  cmhit:
+  chufan:
     peers:
       peer0.org1.example.com:
         endorsingPeer: true

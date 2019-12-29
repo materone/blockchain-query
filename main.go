@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"sync"
+	"time"
 
 	// "time"
 
@@ -20,8 +23,54 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/pkg/fabsdk"
 )
 
+var wg sync.WaitGroup
+
 func handle(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "All Done")
+
+	fmt.Fprintln(w, "All Done: ", r.RemoteAddr)
+	os.Exit(0)
+}
+
+func calltx(client *channel.Client, cnt *string) {
+	var args [][]byte
+	args = append(args, []byte("a"))
+	args = append(args, []byte("b"))
+	args = append(args, []byte(*cnt))
+
+	fmt.Println("args:", args)
+	request := channel.Request{
+		ChaincodeID: "mycc",
+		Fcn:         "invoke",
+		Args:        args,
+	}
+	response, err := client.Execute(request, channel.WithTargetEndpoints("peer0.org1.example.com", "peer0.org2.example.com"))
+	if err != nil {
+		log.Fatal("query fail: ", err.Error())
+	} else {
+		fmt.Printf("response is ChaincodeStatus[%s] TransactionID[%s] TxValidationCode[%s]\n", response.ChaincodeStatus, response.TransactionID, response.TxValidationCode)
+	}
+	wg.Done()
+}
+
+func calltx1(client *channel.Client, cnt *string) {
+	var args [][]byte
+	args = append(args, []byte("myvar"))
+	args = append(args, []byte(*cnt))
+	args = append(args, []byte("+"))
+
+	// fmt.Println("args:", args)
+	request := channel.Request{
+		ChaincodeID: "bigdatacc",
+		Fcn:         "update",
+		Args:        args,
+	}
+	response, err := client.Execute(request, channel.WithTargetEndpoints("peer0.org1.example.com", "peer0.org2.example.com"))
+	if err != nil {
+		log.Fatal("update call fail: ", err.Error())
+	} else {
+		fmt.Printf("response is ChaincodeStatus[%s] TransactionID[%s] TxValidationCode[%s]\n", response.ChaincodeStatus, response.TransactionID, response.TxValidationCode)
+	}
+	wg.Done()
 }
 
 func main() {
@@ -29,6 +78,7 @@ func main() {
 	flag.StringVar(configPath, "c", "./config.yaml", "App config path short")
 	blockId := flag.Uint64("id", 4, "Block ID which will display")
 	transCount := flag.String("n", "18", "transfer number n point from a to b")
+	batchSize := flag.Int("s", 1000, "Batch times  of invoke chaincode !")
 	// port := flag.String("p", "3000", "Liston Port")
 	flag.Parse()
 	fmt.Println("Begin init")
@@ -58,7 +108,7 @@ func main() {
 	fmt.Println("Init with config.")
 
 	//调用合约
-	channelProvider := sdk.ChannelContext("cmhit",
+	channelProvider := sdk.ChannelContext("chufan",
 		fabsdk.WithUser("Admin"),
 		fabsdk.WithOrg("org1.example.com"))
 	fmt.Println("create channel context.")
@@ -98,23 +148,21 @@ func main() {
 	fmt.Println(ledgerInfo)
 
 	//call invoke
-	args = nil
-	args = append(args, []byte("a"))
-	args = append(args, []byte("b"))
-	args = append(args, []byte(*transCount))
-
-	fmt.Println("args:", args)
-	request = channel.Request{
-		ChaincodeID: "mycc",
-		Fcn:         "invoke",
-		Args:        args,
+	x := *batchSize / 1000
+	y := *batchSize % 1000
+	for i := 0; i < x; i++ {
+		for j := 0; j < 1000; j++ {
+			wg.Add(1)
+			go calltx1(channelClient, transCount)
+		}
+		wg.Wait()
+		time.Sleep(3 * time.Second)
 	}
-	response, err = channelClient.Execute(request, channel.WithTargetEndpoints("peer0.org1.example.com", "peer0.org2.example.com"))
-	if err != nil {
-		log.Fatal("query fail: ", err.Error())
-	} else {
-		fmt.Printf("response is ChaincodeStatus[%s] TransactionID[%s] TxValidationCode[%s]\n", response.ChaincodeStatus, response.TransactionID, response.TxValidationCode)
+	for k := 0; k < y; k++ {
+		wg.Add(1)
+		go calltx1(channelClient, transCount)
 	}
+	wg.Wait()
 
 	//query
 	args = nil
@@ -143,10 +191,12 @@ func main() {
 		fmt.Println("Block Get Data:", blockinfo.GetData())
 		fmt.Println(cchelper.GetTransactionInfoFromData(blockinfo.GetData().Data[0], true))
 	}
+
 	//close resource
-	sdk.Close()
+	defer sdk.Close()
+	time.Sleep(2 * time.Second)
 
 	//spawn http
 	http.HandleFunc("/", handle)
-	// http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", *port), nil)
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", "3000"), nil)
 }

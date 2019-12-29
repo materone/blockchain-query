@@ -14,5 +14,4 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/sykesm/zap-logfmt v0.0.3 // indirect
 	go.uber.org/zap v1.13.0 // indirect
-	google.golang.org/appengine v1.4.0 // indirect
 )
