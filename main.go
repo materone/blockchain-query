@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"sync"
-	"time"
 
 	// "time"
 
@@ -151,17 +150,23 @@ func main() {
 	x := *batchSize / 1000
 	y := *batchSize % 1000
 	for i := 0; i < x; i++ {
+		wg = sync.WaitGroup{}
 		for j := 0; j < 1000; j++ {
 			wg.Add(1)
 			go calltx1(channelClient, transCount)
 		}
+		fmt.Println("before wait")
 		wg.Wait()
-		time.Sleep(3 * time.Second)
+		fmt.Println("out ", i)
+		// time.Sleep(3 * time.Second)
 	}
+
+	wg = sync.WaitGroup{}
 	for k := 0; k < y; k++ {
 		wg.Add(1)
 		go calltx1(channelClient, transCount)
 	}
+	fmt.Println("before wait end")
 	wg.Wait()
 
 	//query
@@ -194,7 +199,7 @@ func main() {
 
 	//close resource
 	defer sdk.Close()
-	time.Sleep(2 * time.Second)
+	// time.Sleep(2 * time.Second)
 
 	//spawn http
 	http.HandleFunc("/", handle)
